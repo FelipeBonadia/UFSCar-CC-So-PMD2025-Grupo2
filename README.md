@@ -3,12 +3,13 @@
 **Grupo:** 2
 
 **Integrantes:**  
-- FELIPE BONADIA BRAVO - 813908
-- LAURA RIEKO MARÇAL IMAI - 813451
-- RYAN DE MELO ANDRADE - 812899
+- Felipe Bonadia Bravo - 813908
+- Laura Rieko Marçal Imai - 813451
+- Ryan De Melo Andrade - 812899
 
 
 **Disciplina:** Processamento Massivo de Dados
+
 **Professora:** Profa. Dra. Sahudy Montenegro González
 
 ---
