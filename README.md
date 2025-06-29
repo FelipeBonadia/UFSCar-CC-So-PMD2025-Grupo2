@@ -65,27 +65,30 @@ Que um usuário avaliou e se hospedou em um hotel, quando um hotel é ligado a u
 
 ### Arquitetura e fluxo de dados
 
+![Exemplo de Imagem](image.png)
 
-
-
-
-
-## Fonte de Dados
-Utiliza-se o dataset público **Airbnb Listings** do **MongoDB Atlas**, contendo cerca de 5.500 registros com informações como:
-
-- Nome, tipo de imóvel, número de quartos, preço;
-- Lista de comodidades;
-- Localização e avaliações.
-
-[Dataset oficial](https://www.mongodb.com/pt-br/docs/atlas/sample-data/sample-airbnb/#std-label-sample-airbnb)
-
+A arquitetura do sistema de recomendação segue uma estrutura modular, com etapas bem definidas para ingestão, transformação, armazenamento e análise dos dados.
+Com relação ao fluxo de dados, pode-se inferir que o processo se inicia com a coleta de dados de hospedagem, que estão armazenados no MongoDB, contendo várias informações, como nome, quartos, preços, comodidades e avaliações. Posteriormente, será realizada a importação e o pré-processamento dos dados, garantindo que os atributos desejados sejam considerados na análise. Com essa etapa concluída, extraímos os atributos principais, como as comodidades, países, dentre outros.
+Em seguida, deve-se realizar o envio dos dados processados para o Neo4j, aproveitado-se da biblioteca APOC, permitindo que a criação dos grafos seja concluída com sucesso, sendo que nele estarão presentes nós dos tipos: Hotel, Comodidade, Localização, Avaliações/usuários - e arestas dos tipo: POSSUI, ESTA, AVALIOU. Após isso, o usuário entra com o ID para receber as recomendações personalizadas, o sistema realiza uma consulta para identificar as hospedagens que já foram alugadas pelo usuário, analisando, desse modo, os padrões de preferência do usuário, no que diz respeito à prioridade de comodidades, preços e quartos por exemplo. 
+Esses padrões são usados para gerar um perfil do usuário baseado em seu histórico, com o perfil gerado, o sistema consulta o grafo por hospedagens que possuem similaridade com as preferências. Por fim, é apresentada ao usuário uma lista personalizada de hotéis recomendados, com base nas similaridades encontradas. 
 
 ---
 
-## Tecnologias Utilizadas
+### Sobre o uso do programa
 
-| Tecnologia | Função |
-|------------|--------|
-| **MongoDB** | Armazenamento de hospedagens como documentos JSON |
-| **Neo4j** | Modelagem e análise das relações via grafos |
-| **APOC** | Integração entre MongoDB e Neo4j |
+Para ilustrar o funcionamento do sistema de recomendações proposto, considere o caso de um usuário que já alugou três acomodações no Airbnb. Todas elas possuíam dois quartos. As comodidades oferecidas por cada uma foram as seguintes:
+Acomodação 1: Wi-Fi, ar-condicionado, cozinha, extintor de incêndio, geladeira e micro-ondas.
+Acomodação 2: Wi-Fi, cozinha, cafeteira, máquina de lavar, TV e geladeira.
+Acomodação 3: Wi-Fi, garagem, cozinha, aquecedor, geladeira e forno.
+Com base nesse histórico, o sistema identifica padrões de preferência do usuário. Neste exemplo, destaca-se a recorrência de acomodações com dois quartos, além das comodidades Wi-Fi, cozinha e geladeira, presentes em todas as estadias anteriores. Assim, ao recomendar novas opções, o programa prioriza aquelas que compartilham essas características, oferecendo sugestões mais alinhadas ao perfil e às preferências do usuário.
+
+
+
+
+
+## Bibliografia 
+
+- SANTURBANO, Andrea. Transform MongoDB collections automagically into Graphs. Medium, Neo4j Developer Blog, 29 nov. 2019. Disponível em: https://medium.com/neo4j/transform-mongodb-collections-automagically-into-graphs-9ea085d6e3ef. Acesso em: 11 jun. 2025
+- MONGODB. Atlas Sample Data – Sample Airbnb. MongoDB, [s.d.]. Disponível em: https://www.mongodb.com/pt-br/docs/atlas/sample-data/sample-airbnb/. Acesso em: 17 jun. 2025.
+- NEO4J. APOC Library – Awesome Procedures On Cypher. Neo4j Labs, [s.d.]. Disponível em: https://neo4j.com/labs/apoc/. Acesso em: 17 jun. 2025.
+
