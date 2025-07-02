@@ -72,7 +72,7 @@ Acerca de como os dados presentes no grafo vão ser organizados, que são as com
 
 ### Arquitetura e fluxo de dados
 
-![Exemplo de Imagem](image.png)
+![Exemplo de Imagem](Fluxograma.png)
 
 A arquitetura do sistema de recomendação segue uma estrutura modular, com etapas bem definidas para ingestão, transformação, armazenamento e análise dos dados.
 
