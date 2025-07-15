@@ -104,6 +104,385 @@ Com base nesse histórico, o sistema identifica padrões de preferência do usu�
 
 
 
+# Desenvolvimento
+
+## Descrição
+
+Aplicação Flask que recomenda hotéis com base em preferências anteriores do usuário, utilizando MongoDB e Neo4j.
+
+
+## Transferência de dados para as recomendações do MongoDB ao Neo4j
+
+O seguinte comando foi utilizado para transferir dados relevantes para a execução das consultas de recomendação do MongoDB para o Neo4j
+
+```cypher
+
+CALL apoc.periodic.iterate(
+'CALL apoc.mongo.find(
+  "mongodb+srv://ryanandrade:12345678ryan@cluster0.jtjptts.mongodb.net/sample_airbnb.listingsAndReviews",
+  {},
+  {objectIdAsMap: false, compatibleValues: true,  bsonToJson: true, 
+  project: {_id: 1, amenities: 1, address: {country: 1}, reviews: {_id: 1}, 
+  bedroomds: 1, price: 1}}
+) YIELD value return value',
+
+```
+
+**O que faz?**
+
+A primeira parte do comando estabelece uma conexão com o banco do MongoDB, obtendo os documentos com os dados que serão escritos no Neo4j, sendo eles:
+- Os ids dos hoteis, junto de seu preço e número de quartos
+- As comodidades
+- Os paises 
+- Os usuários
+
+```cypher
+'
+WITH value
+MERGE (h:Hotel {id: value._id})
+SET h.price = value.price,
+    h.bedrooms = value.bedrooms
+
+// Comodidades
+WITH h, value
+UNWIND value.amenities AS amenity
+MERGE (a:Amenity {name: amenity})
+MERGE (h)-[:HAS_AMENITY]->(a)
+
+// País
+WITH DISTINCT h, value
+MERGE (c:Country {name: value.address.country})
+MERGE (h)-[:IS_LOCATED]->(c)
+
+// Reviews
+WITH DISTINCT h, value
+UNWIND value.reviews AS review
+MERGE (u:User {id: review._id})
+MERGE (u)-[:HAS_RENTED]->(h)
+',
+{batchSize: 100, parallel: false}
+)
+
+```
+
+**O que faz?**
+
+O restante do comando pega os documentos obtidos pela conexão, e para cada documento, que possui os dados de um hotel, é feito o seguinte:
+
+
+**Criação de nós**
+
+- Se o nó já não existe, é criado um nó com o id do hotel, seu preço e número de quartos
+- Para cada comodidade que esse hotel possui, se o nó já não existe, é criado um nó com o nome da comodidade
+- Se o nó já não existe, é criado um nó com o nome do país que o hotel está
+- Para cada usuário que alugou esse hotel, se o nó já não existe, é criado um nó com o id do usuário
+
+
+**Criação de conexões**
+
+- O nó com o id do hotel é ligado aos nós das comodidades que ele possui pela conexão `HAS_AMENITY`
+- O nó com o id do hotel é ligado ao nó do país que ele está pela conexão `IS_LOCATED`
+- O nó com o id do hotel é ligado aos nós dos usuários que o alugaram pela conexão `HAS_RENTED`
+
+
+
+## Criação de Conexões entre Usuários e Hotéis
+
+A fim do desenvolvimento do trabalho, este script Cypher cria novas conexões entre usuários (`User`) e hotéis (`Hotel`) no Neo4j, simulando aluguéis.
+
+**Motivação**
+
+No banco de dados original, cada usuário tinha alugado apenas um Airbnb, o que dificultaria a criação de um sistema de recomendação. 
+
+## Script
+
+```cypher
+CALL apoc.periodic.iterate(
+  "
+    MATCH (u:User)
+    RETURN u
+  ",
+  "
+    MATCH (h:Hotel)
+    WHERE NOT (u)-[:HAS_RENTED]->(h)
+    WITH u, collect(h) AS hoteisDisponiveis
+    WITH u, apoc.coll.randomItems(hoteisDisponiveis, 2, false) AS hoteisSorteados
+    UNWIND hoteisSorteados AS hotel
+    MERGE (u)-[:HAS_RENTED]->(hotel)
+  ",
+  {batchSize: 100, parallel: false}
+)
+```
+
+**O que ele faz**
+
+Para cada usuário:
+- Encontra hotéis que ele ainda não alugou.
+- Sorteia hotéis aleatórios dessa lista.
+- Cria a relação `HAS_RENTED` com esses hotéis.
+
+
+## Como Executar
+
+```bash
+pip install flask pymongo neo4j
+python app.py
+```
+
+## Conexões com Banco de Dados
+
+O sistema conecta-se a dois bancos:
+- **MongoDB**: onde armazena e consulta as recomendações geradas;
+- **Neo4j**: responsável por processar recomendações com base em similaridade de preferências de usuários e hotéis.
+
+As conexões são feitas no início do script. Caso falhem, são capturadas e informadas no terminal.
+
+## Entrada do Usuário
+
+O usuário fornece:
+1. Seu ID (`userId`);
+2. O número do país desejado para receber recomendações.
+
+Essas entradas personalizam a consulta Cypher executada no Neo4j.
+
+## Geração ou Recuperação de Recomendação
+
+- O sistema verifica se já existem recomendações salvas para esse usuário + país no MongoDB.
+- Se **existirem**, os dados são recuperados do banco.
+- Caso contrário, é executada uma **consulta Cypher elaborada** no Neo4j, baseada em:
+  - amenidades preferidas,
+  - número de quartos,
+  - preço médio histórico,
+  - similaridade entre hotéis não visitados.
+
+Os resultados são salvos no MongoDB para reutilização.
+
+## Exibição via Flask
+
+O Flask exibe as recomendações no navegador, carregando:
+- Nome do hotel,
+- Preço,
+- Número de quartos,
+- Nota média,
+- Nome do host,
+- Imagem.
+
+Tudo é renderizado usando o template `index2.html`.
+
+## Sobre a Consulta de Recomendação
+
+### Análise das Amenities do Usuário no Cypher
+
+```cypher
+MATCH (u:User {id: "xxxxxx" })-[:HAS_RENTED]->(rentedHotel:Hotel)-[:HAS_AMENITY]->(amenity:Amenity)
+WITH u, amenity, COUNT(amenity) as amenityFrequency
+WITH u, COLLECT({amenity: amenity, frequency: amenityFrequency}) as userAmenityFrequencies,
+     SUM(amenityFrequency) as totalAmenityCount
+```
+<sub>Exemplo de id válido: 221244427</sub>
+
+**O que faz?**
+  - Encontrar todos os hotéis alugados pelo usuário e suas respectivas amenidades.
+  - Contar quantas vezes cada amenidade aparece.
+  - Calcular a frequência de cada amenidade para o usuário, criando uma lista.
+  - Calcular o total de amenidades para o usuário.
+  
+**Exemplo**: Se o usuário alugou 3 hotéis, 3 vezes com Wi-Fi e 1 vez com piscina, a lista será:
+  - `userAmenityFrequencies = [{amenity: "Wi-Fi", frequency: 3}, {amenity: "Pool", frequency: 1}]` 
+  - `totalAmenityCount = 4`
+
+### Determinação do Número de Quartos Preferido do Usuário
+
+```cypher
+MATCH (u)-[:HAS_RENTED]->(rentedHotel:Hotel)
+WITH u, userAmenityFrequencies, totalAmenityCount,
+     COLLECT(rentedHotel.bedrooms) as bedroomHistory
+UNWIND bedroomHistory as bedroom
+WITH u, userAmenityFrequencies, totalAmenityCount,
+     bedroom, COUNT(bedroom) as frequency
+ORDER BY frequency DESC
+WITH u, userAmenityFrequencies, totalAmenityCount,
+     COLLECT(bedroom)[0] as preferredBedrooms
+```
+**O que faz?**
+  - Conta quantas vezes cada número de quartos aparece no histórico.
+  - Ordena de forma descendente pela frequência de número de quartos.
+  - Seleciona a moda (número de quartos mais frequente) como a preferência do usuário.
+  
+**Exemplo**: Se o usuário alugou 5 hotéis, 3 deles com 1 quarto e 1 com 7 quartos e 1 com 3 quartos, a a preferência será por hotéis com apenas 1 quarto.
+
+### Histórico de Preços Baseado nos Quartos Preferidos
+
+```cypher
+MATCH (u)-[:HAS_RENTED]->(rentedHotel:Hotel)
+WHERE rentedHotel.bedrooms = preferredBedrooms
+WITH u, userAmenityFrequencies, totalAmenityCount, preferredBedrooms,
+     AVG(rentedHotel.price) as avgPrice,
+     MIN(rentedHotel.price) as minPrice,
+     MAX(rentedHotel.price) as maxPrice
+```
+**O que faz?**
+  - Calcula estatísticas de preço **apenas** dos hotéis que têm a quantidade de quartos preferida pelo usuário.
+  - Calcula o preço médio, mínimo e máximo dos hotéis com o número de quartos preferido.
+
+  
+**Exemplo**: Se o usuário prefere hotéis de 2 quartos e alugou:
+  - Hotel A: 1 quarto, $100 → **Ignorado no cálculo**
+  - Hotel B: 2 quartos, $200 → **Incluído**
+  - Hotel C: 2 quartos, $300 → **Incluído**
+  - Hotel D: 3 quartos, $400 → **Ignorado no cálculo**
+  
+**avgPrice** = $250 (média apenas dos hotéis de 2 quartos)
+
+### Seleção de Hotéis Candidatos
+
+```cypher
+MATCH (country:Country {name: "xxxxxx"})<-[:IS_LOCATED]-(hotel:Hotel)
+// WHERE NOT EXISTS((u)-[:HAS_RENTED]->(hotel))
+OPTIONAL MATCH (hotel)-[:HAS_AMENITY]->(hotelAmenity:Amenity)
+WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice, preferredBedrooms,
+     hotel, COLLECT(DISTINCT hotelAmenity) as hotelAmenities
+```
+
+<sub>Exemplo de país válido: Brazil</sub>
+
+
+**O que faz?**
+  - Encontra hotéis na localização escolhida.
+  - Coleta as comodidades presentes nessas hospedagens.
+  
+### Score das Amenities
+
+```cypher
+WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice, preferredBedrooms,
+     hotel, hotelAmenities,
+     [amenityFreq IN userAmenityFrequencies 
+      WHERE amenityFreq.amenity IN hotelAmenities | 
+      toFloat(amenityFreq.frequency) / toFloat(totalAmenityCount)] as matchingWeights
+WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice, preferredBedrooms,
+     hotel, hotelAmenities, matchingWeights,
+     CASE 
+       WHEN SIZE(matchingWeights) = 0 THEN 0.0
+       ELSE REDUCE(sum = 0.0, weight IN matchingWeights | sum + weight)
+     END as weightedAmenityScore
+```
+**O que faz?**
+  - Analisa quais são as comodidades do hotel que coincidem com as do histórico do usuário, calculando o peso normalizado dela.
+  - Soma todos os pesos da amenities comuns.
+  - Caso a comodidade não esteja entre as comuns, atribui-se peso 0.
+
+
+**Exemplo**: O usuário alugou hotéis com as seguintes amenities:
+  - Piscina: 1 vezes
+  - Wi-Fi: 3 vezes
+  - Total de ocorrências: 4
+
+&nbsp;&nbsp;&nbsp;&nbsp; Aqui, temos então os pesos normalizados dessas comodidades:
+  - Piscina: 1/4 = 0.25 = 25%
+  - Wi-Fi: 3/4 = 0.75 = 75%
+
+&nbsp;&nbsp;&nbsp;&nbsp;Caso a hospedagem tenha comodidas "extras", como "Academia" e "Café da manhã", além das citadas acima, temos o seguinte cálculo:
+  - Amenities Comuns: Piscina, Wi-Fi: 100% (25% + 75%)
+  - Amenities Extras: Academia, Café da manhã: 0% (0% + 0%)
+  - Score: 100%
+
+&nbsp;&nbsp;&nbsp;&nbsp;Caso a hospedagem tenha comodidas "extras", como "Academia" e "Café da manhã", juntamente com a "Wi-Fi", temos o seguinte cálculo:
+  - Amenities Comuns: Wi-Fi: 75%
+  - Amenities Extras: Academia, Café da manhã: 0% (0% + 0%)
+  - Score: 75%
+
+
+### Score dos Quartos
+
+```cypher
+WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice, preferredBedrooms,
+     hotel, weightedAmenityScore,
+     CASE 
+       WHEN hotel.bedrooms = preferredBedrooms THEN 1.0
+       WHEN ABS(hotel.bedrooms - preferredBedrooms) = 1 THEN 0.7
+       WHEN ABS(hotel.bedrooms - preferredBedrooms) = 2 THEN 0.4
+       ELSE 0.2
+     END as bedroomScore
+```
+**O que faz?**
+  - Score máximo (1) caso o número de quartos seja igual ao da preferência.
+  - Score 0.7 para uma diferença modular de 1; bem como score de 0.4 para diferença modular de 2 quartos.
+  - Demais casos, com diferença absoluta superior, atribui-se Score mínimo (0.2).
+
+> ❗ **Nota:** Os pesos podem ser redefinidos, basta alterá-los no código, também é possível acrescentar pesos específicos para mais diferenças, de modo a penalizar menos a variação (distância) entre a quantidade de quartos preferida e a disponível na hospedagem.
+
+### Score do Preço
+
+```cypher
+WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice, preferredBedrooms,
+     hotel, weightedAmenityScore, bedroomScore,
+     CASE 
+       WHEN maxPrice = minPrice THEN 1.0
+       ELSE 1 - (ABS(hotel.price - avgPrice) / (maxPrice - minPrice))
+     END as priceScore
+```
+**O que faz?**
+  - Caso todos os hotéis tenham o mesmo preço, atribui-se Score máximo (1).
+  - Senão, calcula-se o quão próximo o preço do hotel está, com relação à média de preços alugados do usuário.
+  - **IMPORTANTE**: Agora usa a faixa de preços baseada **apenas nos hotéis com a quantidade de quartos preferida** para normalizar.
+
+**Exemplo**: 
+
+Histórico de Preços dos Hotéis com Quartos Preferidos (2 quartos):
+
+| Hotel   | Quartos | Preço (\$) | Incluído no Cálculo |
+| ------- | ------- | ---------- | ------------------- |
+| Hotel A | 1       | 100        | ❌ Não               |
+| Hotel B | 2       | 200        | ✅ Sim               |
+| Hotel C | 2       | 150        | ✅ Sim               |
+| Hotel D | 2       | 250        | ✅ Sim               |
+| Hotel E | 3       | 400        | ❌ Não               |
+
+Cálculos Baseados no Histórico (apenas hotéis de 2 quartos):
+
+- **avgPrice** = (200 + 150 + 250) / 3 = **$200**
+- **minPrice** = **$150**
+- **maxPrice** = **$250**
+- **Faixa de Preços** = 250 - 150 = **$100**
+
+Cálculo do `priceScore`:
+
+Fórmula:
+
+```text
+priceScore = 1 - (ABS(preço_candidato - avgPrice) / (maxPrice - minPrice))
+```
+
+Avaliação de Hotéis Candidatos (2 quartos):
+
+| Hotel Candidato         | Preço ($) | Cálculo                                                                 | priceScore (%) |
+|-------------------------|-----------|--------------------------------------------------------------------------|----------------|
+| Médio Histórico         | 200       | 1 - (ABS(200 - 200) / 100) = 1 - (0 / 100) = 1 - 0 = **1.0**              | **100%**       |
+| Ligeiramente Mais Caro | 225       | 1 - (ABS(225 - 200) / 100) = 1 - (25 / 100) = 1 - 0.25 = **0.75**         | **75%**        |
+| Preço Mínimo            | 150       | 1 - (ABS(150 - 200) / 100) = 1 - (50 / 100) = 1 - 0.5 = **0.5**           | **50%**        |
+| Preço Máximo            | 250       | 1 - (ABS(250 - 200) / 100) = 1 - (50 / 100) = 1 - 0.5 = **0.5**           | **50%**        |
+| Muito Caro              | 300       | 1 - (ABS(300 - 200) / 100) = 1 - (100 / 100) = 1 - 1 = **0.0**            | **0%**         |
+| Muito Barato            | 100       | 1 - (ABS(100 - 200) / 100) = 1 - (100 / 100) = 1 - 1 = **0.0**            | **0%**         |
+
+### Score Final e Ranking de Recomendações
+
+```cypher
+WITH hotel, weightedAmenityScore, bedroomScore, priceScore,
+     (weightedAmenityScore * 0.4 + bedroomScore * 0.35 + priceScore * 0.25) as finalScore
+RETURN hotel.id as hotelId,
+       ROUND(finalScore * 100, 2) as finalRecommendationScore
+ORDER BY finalScore DESC
+LIMIT 10
+```
+**O que faz?**
+  - Combina os três scores calculados anteriormente, com pesos específicos:
+    - Amenitiess: 40% (0.4)
+    - Quartos: 35% (0.35)
+    - Preço: 25% (0.25)
+  - Retorna o ID do hotel e o Score final, ordenado por ordem decrescente, limitando a 10 recomendações.
+  
+> ❗ **Nota:** Os pesos podem ser redefinidos, basta alterá-los no código.
+
 
 
 ## Bibliografia 
