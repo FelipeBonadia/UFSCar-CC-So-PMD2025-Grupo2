@@ -1,12 +1,16 @@
 # Criar Conexões entre Usuários e Hotéis
 
-Este script Cypher usa `apoc.periodic.iterate` para criar conexões entre usuários (`User`) e hotéis (`Hotel`) no Neo4j, simulando aluguéis.
+Este script Cypher usa `apoc.periodic.iterate` para criar novas conexões entre usuários (`User`) e hotéis (`Hotel`) no Neo4j, simulando aluguéis.
+
+## Motivações
+
+No banco de dados original, cada usuário tinha alugado apenas um aribnb, o que dificultaria a criação de um sistema de recomandação.
 
 ## O que ele faz
 
 Para cada usuário:
-- Encontra hotéis que ele **ainda não alugou**.
-- Sorteia **2 hotéis aleatórios** dessa lista.
+- Encontra hotéis que ele ainda não alugou.
+- Sorteia 2 hotéis aleatórios dessa lista.
 - Cria a relação `HAS_RENTED` com esses hotéis.
 
 ## Script
@@ -28,7 +32,3 @@ CALL apoc.periodic.iterate(
   {batchSize: 100, parallel: false}
 )
 ```
-
-## Requisitos
-
-- Neo4j com APOC instalado.
