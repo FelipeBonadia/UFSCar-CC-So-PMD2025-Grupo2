@@ -18,6 +18,15 @@
 
 ---
 
+## Resumo 
+Este projeto apresenta o desenvolvimento de um sistema de recomendação de hospedagens na plataforma Airbnb, baseado em um modelo híbrido de banco de dados, que integra MongoDB (documentos) e Neo4j (grafos). O objetivo principal é sugerir acomodações personalizadas aos usuários com base em seu histórico de reservas, considerando atributos como número de quartos, faixa de preço e comodidades presentes.
+
+O MongoDB é usado para armazenar os dados dos hotéis, enquanto o Neo4j modela os relacionamentos entre usuários, acomodações, localização e avaliações. A integração entre os dois bancos é feita por meio da biblioteca APOC, permitindo a transformação dos dados em grafos.
+
+A arquitetura proposta permite identificar padrões de preferência do usuário e realizar recomendações eficientes com base em similaridade. O sistema prioriza acomodações que compartilham características frequentes no histórico do usuário, como número de quartos e comodidades mais recorrentes, tudo isso, com base na localização que o usuário insere para a sua próxima hospedagem.
+
+Este trabalho evidencia a aplicabilidade de tecnologias NoSQL em soluções práticas e escaláveis, demonstrando como a combinação de documentos e grafos pode potencializar sistemas de recomendação inteligentes.
+
 ## Definição do tema
 O tema que iremos explorar no desenvolvimento do trabalho é o “Sistema de Recomendação para Hospedagens Airbnb”, feito com base em um banco de dados híbrido - de Documentos e Grafos. Nessa senda, visa-se modelar e analisar dados sobre hotéis, suas comodidades, localizações, preços, dentre outros atributos, com objetivo de fornecer recomendações personalizadas baseado nas preferências demonstradas pelo histórico do usuário.
 
