@@ -271,7 +271,7 @@ Tudo é renderizado usando o template `index2.html`.
 
 ## Sobre a Consulta de Recomendação
 
-### Análise das Amenities do Usuário no Cypher
+### Análise das Comodidades do Usuário no Cypher
 
 ```cypher
 MATCH (u:User {id: "xxxxxx" })-[:HAS_RENTED]->(rentedHotel:Hotel)-[:HAS_AMENITY]->(amenity:Amenity)
@@ -351,7 +351,7 @@ WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice,
   - Encontra hotéis na localização escolhida.
   - Coleta as comodidades presentes nessas hospedagens.
   
-### Score das Amenities
+### Score das Comodidades
 
 ```cypher
 WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice, preferredBedrooms,
@@ -368,11 +368,11 @@ WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice,
 ```
 **O que faz?**
   - Analisa quais são as comodidades do hotel que coincidem com as do histórico do usuário, calculando o peso normalizado dela.
-  - Soma todos os pesos da amenities comuns.
+  - Soma todos os pesos das comodidades comuns.
   - Caso a comodidade não esteja entre as comuns, atribui-se peso 0.
 
 
-**Exemplo**: O usuário alugou hotéis com as seguintes amenities:
+**Exemplo**: O usuário alugou hotéis com as seguintes comodidades:
   - Piscina: 1 vezes
   - Wi-Fi: 3 vezes
   - Total de ocorrências: 4
@@ -382,13 +382,13 @@ WITH u, userAmenityFrequencies, totalAmenityCount, avgPrice, minPrice, maxPrice,
   - Wi-Fi: 3/4 = 0.75 = 75%
 
 &nbsp;&nbsp;&nbsp;&nbsp;Caso a hospedagem tenha comodidas "extras", como "Academia" e "Café da manhã", além das citadas acima, temos o seguinte cálculo:
-  - Amenities Comuns: Piscina, Wi-Fi: 100% (25% + 75%)
-  - Amenities Extras: Academia, Café da manhã: 0% (0% + 0%)
+  - Comodidades Comuns: Piscina, Wi-Fi: 100% (25% + 75%)
+  - Comodidades Extras: Academia, Café da manhã: 0% (0% + 0%)
   - Score: 100%
 
 &nbsp;&nbsp;&nbsp;&nbsp;Caso a hospedagem tenha comodidas "extras", como "Academia" e "Café da manhã", juntamente com a "Wi-Fi", temos o seguinte cálculo:
-  - Amenities Comuns: Wi-Fi: 75%
-  - Amenities Extras: Academia, Café da manhã: 0% (0% + 0%)
+  - Comodidades Comuns: Wi-Fi: 75%
+  - Comodidades Extras: Academia, Café da manhã: 0% (0% + 0%)
   - Score: 75%
 
 
@@ -476,7 +476,7 @@ LIMIT 10
 ```
 **O que faz?**
   - Combina os três scores calculados anteriormente, com pesos específicos:
-    - Amenitiess: 40% (0.4)
+    - Comodidades: 40% (0.4)
     - Quartos: 35% (0.35)
     - Preço: 25% (0.25)
   - Retorna o ID do hotel e o Score final, ordenado por ordem decrescente, limitando a 10 recomendações.
