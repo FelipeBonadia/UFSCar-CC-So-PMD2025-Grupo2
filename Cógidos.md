@@ -2,9 +2,9 @@
 
 Este script Cypher usa `apoc.periodic.iterate` para criar novas conexões entre usuários (`User`) e hotéis (`Hotel`) no Neo4j, simulando aluguéis.
 
-## Motivações
+## Motivação
 
-No banco de dados original, cada usuário tinha alugado apenas um aribnb, o que dificultaria a criação de um sistema de recomandação.
+No banco de dados original, cada usuário tinha alugado apenas um Airbnb, o que dificultaria a criação de um sistema de recomandação.
 
 ## O que ele faz
 
