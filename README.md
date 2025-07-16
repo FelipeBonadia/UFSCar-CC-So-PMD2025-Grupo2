@@ -483,6 +483,24 @@ LIMIT 10
   
 > ❗ **Nota:** Os pesos podem ser redefinidos, basta alterá-los no código.
 
+## Conclusões
+O desenvolvimento do sistema de recomendação para hospedagens Airbnb demonstrou a eficácia da integração entre tecnologias NoSQL distintas para solucionar problemas complexos de análise de dados e personalização. O projeto alcançou seus objetivos principais, ao implementar um sistema híbrido, que combina as vantagens dos bancos de documentos (MongoDB) e de grafos (Neo4j).
+
+### Conquistas Alcançadas
+O sistema desenvolvido conseguiu  analisar padrões de preferência dos usuários com base em seu histórico de reservas, considerando múltiplas dimensões como comodidades, número de quartos e faixa de preço. A implementação do algoritmo de recomendação baseado em scores ponderados, mostrou-se capaz de gerar sugestões personalizadas e relevantes.
+
+A integração entre MongoDB e Neo4j através da biblioteca APOC funcionou de forma eficiente, permitindo a transformação automática dos dados em formato de documento para estruturas de grafo. O sistema conseguiu processar aproximadamente 5.500 anúncios do Airbnb, criando relacionamentos entre usuários, hotéis, comodidades e localizações.
+
+### Reflexões sobre o Uso de Tecnologias NoSQL
+A escolha das tecnologias NoSQL revelou-se acertada para este tipo de aplicação. O MongoDB demonstrou sua versatilidade no armazenamento de dados semi-estruturados dos hotéis, permitindo consultas rápidas e flexibilidade na estrutura dos documentos, como foi aproveitado na interface apresentada. Por outro lado, o Neo4j evidenciou sua superioridade em cenários onde os relacionamentos são fundamentais, eliminando a necessidade de múltiplas junções SQL que degradariam significativamente a performance.
+
+A combinação das duas tecnologias permitiu aproveitar o melhor de cada paradigma: a facilidade de armazenamento e consulta de dados estruturados no MongoDB, e a eficiência na navegação de relacionamentos complexos no Neo4j. Esta abordagem, mostrou-se especialmente valiosa em sistemas de recomendação, onde a análise de padrões e similaridades é essencial.
+
+### Limitações e Desafios Encontrados
+Durante o desenvolvimento, foram identificados alguns desafios técnicos. A necessidade de criar relacionamentos adicionais entre usuários e hotéis (através do script de criação de conexões) evidenciou uma limitação dos dados originais, onde cada usuário havia alugado apenas uma hospedagem. Esta limitação foi contornada através da geração de relacionamentos "sintéticos", para fins de teste, mas destaca a importância da qualidade e diversidade dos dados históricos em sistemas de recomendação.
+
+A configuração e integração entre MongoDB e Neo4j também apresentou complexidades, especialmente na definição adequada dos parâmetros da biblioteca APOC e na otimização das consultas Cypher para grandes volumes de dados.
+
 
 
 ## Bibliografia 
