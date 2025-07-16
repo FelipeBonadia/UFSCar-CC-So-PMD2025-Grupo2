@@ -253,7 +253,7 @@ Essas entradas personalizam a consulta Cypher executada no Neo4j.
   - comodidades preferidas,
   - número de quartos,
   - preço médio histórico,
-  - similaridade entre hotéis não visitados.
+  - similaridade entre hotéis.
 
 Os resultados são salvos no MongoDB para reutilização.
 
