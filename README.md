@@ -223,7 +223,7 @@ Para cada usuário:
 
 
 ## Como Executar
-
+Caso seja sua primeira execução do projeto, rode localmente no neo4j os seguintes passos primeiro [Transferência de dados para as recomendações do MongoDB ao Neo4j](#transferência-de-dados-para-as-recomendações-do-mongodb-ao-neo4j)
 ```bash
 pip install flask pymongo neo4j
 python app.py
