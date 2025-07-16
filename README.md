@@ -250,7 +250,7 @@ Essas entradas personalizam a consulta Cypher executada no Neo4j.
 - O sistema verifica se já existem recomendações salvas para esse usuário + país no MongoDB.
 - Se **existirem**, os dados são recuperados do banco.
 - Caso contrário, é executada uma **consulta Cypher elaborada** no Neo4j, baseada em:
-  - amenidades preferidas,
+  - comodidades preferidas,
   - número de quartos,
   - preço médio histórico,
   - similaridade entre hotéis não visitados.
@@ -282,10 +282,10 @@ WITH u, COLLECT({amenity: amenity, frequency: amenityFrequency}) as userAmenityF
 <sub>Exemplo de id válido: 221244427</sub>
 
 **O que faz?**
-  - Encontrar todos os hotéis alugados pelo usuário e suas respectivas amenidades.
-  - Contar quantas vezes cada amenidade aparece.
-  - Calcular a frequência de cada amenidade para o usuário, criando uma lista.
-  - Calcular o total de amenidades para o usuário.
+  - Encontrar todos os hotéis alugados pelo usuário e suas respectivas comodidades.
+  - Contar quantas vezes cada comodidade aparece.
+  - Calcular a frequência de cada comodidade para o usuário, criando uma lista.
+  - Calcular o total de comodidades para o usuário.
   
 **Exemplo**: Se o usuário alugou 3 hotéis, 3 vezes com Wi-Fi e 1 vez com piscina, a lista será:
   - `userAmenityFrequencies = [{amenity: "Wi-Fi", frequency: 3}, {amenity: "Pool", frequency: 1}]` 
