@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Recomendação - Hotéis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .hotel-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .hotel-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .hotel-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .hotel-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .hotel-price {
+            font-size: 1.2em;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .hotel-rating {
+            color: #f39c12;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .hotel-rooms {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .hotel-host {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-top: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .hotel-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Hotéis Recomendados</h1>
+
+        {% if dadosNome and dadosNome|length > 0 %}
+        <div class="hotel-list">
+            {% for i in range(dadosNome|length) %}
+            <div class="hotel-card">
+                <img src="{{ dadosImagem[i] }}" alt="{{ dadosNome[i] }}" onerror="this.onerror=null;this.src='https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1697793110i/12241128.jpg'" class="hotel-image">
+
+                <div class="hotel-name">{{ dadosNome[i] }}</div>
+
+                <div class="hotel-price">$ {{ "%.2f"|format(dadosPreco[i]) }}</div>
+
+                <div class="hotel-rating">
+                    ⭐ {{ dadosNota[i] }}
+                </div>
+
+                <div class="hotel-rooms">
+                    🏨 {{ dadosQuarto[i] }} quartos
+                </div>
+
+                <div class="hotel-host">
+                    Host: {{ dadosHost[i] }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-message">
+            Nenhum hotel encontrado.
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
