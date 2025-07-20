@@ -225,6 +225,16 @@ Para cada usuário:
 - Sorteia hotéis aleatórios dessa lista.
 - Cria a relação `HAS_RENTED` com esses hotéis.
 
+Ao fim do processo, é esperado que você seja capaz de visualizar, por meio da seguinte consulta:
+
+```Cypher
+MATCH (u:User {id: '224999512'})-[r1:HAS_RENTED]->(h:Hotel)-[r2:IS_LOCATED]->(c:Country)
+OPTIONAL MATCH (h)-[r3:HAS_AMENITY]->(a:Amenity)
+RETURN u, r1, h, r2, c, r3, a
+```
+A visualização completa das relações de um `User`, com os hotéis, localidades e comodidades, como em:
+
+![Exemplo de Imagem](visualisation.png)
 
 ## Como Executar
 Caso seja sua primeira execução do projeto, rode localmente no neo4j os seguintes passos primeiro [Transferência de dados para as recomendações do MongoDB ao Neo4j](#transferência-de-dados-para-as-recomendações-do-mongodb-ao-neo4j)
